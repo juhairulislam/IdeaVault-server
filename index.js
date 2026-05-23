@@ -50,6 +50,16 @@ async function run() {
     })
 
 
+    // trending section API
+
+       app.get('/trending' , async(req , res) =>{
+
+        const cursor = ideasCollection.find().limit(6) ;
+        const result = await cursor.toArray() ;
+        res.send(result)
+    })
+
+
 
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
