@@ -1,6 +1,6 @@
 const express = require('express')
 const dotenv = require("dotenv");
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const cors = require("cors")
 dotenv.config()
@@ -36,6 +36,17 @@ async function run() {
         const cursor = ideasCollection.find() ;
         const result = await cursor.toArray() ;
         res.send(result)
+    })
+
+    // dynamic ideas from Id
+    app.get('/ideas/:ideasId' , async(req , res) =>{
+
+        const {ideasId} = req.params ;
+        const query = {_id: new ObjectId(ideasId)} 
+        const result = await ideasCollection.findOne(query) ;
+        res.send(result)
+
+
     })
 
 
