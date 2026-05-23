@@ -1,16 +1,16 @@
-const express = require('express');
-const dotenv = require("dotenv") ;
+const express = require('express')
+const dotenv = require("dotenv");
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const cors = require("cors")
-dotenv.config() ;
-const app = express();
+dotenv.config()
+const app = express()
 app.use(cors())
-const port = process.env.PORT || 8080;
+const port =process.env.PORT || 8080
 
 
 
-const uri = "mongodb+srv://ideavault:QXcvTMD8cyelD3K6@cluster0.f4ctco1.mongodb.net/?appName=Cluster0";
+const uri = "mongodb+srv://ideavault:pDpxvkJJ8oC8TCOI@cluster0.f4ctco1.mongodb.net/?appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -28,10 +28,15 @@ async function run() {
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
 
+    const db = client.db('ideavault') ;
+    const ideasCollection = db.collection('ideas') ;
 
-    const db = client.db("ideavault") ;
-    const ideasCollections = db.collection("ideas")
+    app.get('/ideas' , async(req , res) =>{
 
+        const cursor = ideasCollection.find() ;
+        const result = await cursor.toArray() ;
+        res.send(result)
+    })
 
 
 
@@ -45,13 +50,13 @@ async function run() {
 run().catch(console.dir);
 
 
+
+
 app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
+  res.send('Hello Juhair bhai!')
+})
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+  console.log(`Example app listening on port ${port}`)
+})
 
-// ideavault
-// QXcvTMD8cyelD3K6
