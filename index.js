@@ -2,13 +2,20 @@ const express = require('express')
 const dotenv = require("dotenv");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-const cors = require("cors")
+const cors = require("cors");
+const { createRemoteJWKSet } = require('jose-cjs');
 dotenv.config()
 const app = express()
 app.use(cors())
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 8080 
 
 
+const JWKS = createRemoteJWKSet(
+      new URL(`${process.env.CLIENT_URL}/api/auth/jwks`) 
+
+    )
+
+    console.log(JWKS ,'from jwks')
 
 const uri = process.env.MONGODB_URI
 
