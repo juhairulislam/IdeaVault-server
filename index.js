@@ -39,7 +39,13 @@ async function run() {
     })
 
     // dynamic ideas from Id
-    app.get('/ideas/:ideasId' , async(req , res) =>{
+    app.get('/ideas/:ideasId' , 
+      (req , res , next)=>{
+        console.log(req.params)
+        next() ;
+
+      }
+       , async(req , res) =>{
 
         const {ideasId} = req.params ;
         const query = {_id: new ObjectId(ideasId)} 
