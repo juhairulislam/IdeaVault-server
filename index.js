@@ -29,7 +29,12 @@ const logger = (req, res, next) => {
 
 const verifyToken =async (req, res , next)=>{
 
-  console.log(req.headers , "from verify token")
+  const {authorization}  = req.headers
+
+  // console.log(req.headers , "from verify token")
+
+  const token = authorization?.split(" ")[1] ;
+  console.log(token)
   next() ;
 }
 
