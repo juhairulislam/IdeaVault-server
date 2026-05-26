@@ -7,13 +7,13 @@ const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 dotenv.config()
 const app = express()
 app.use(cors())
-const port = process.env.PORT || 8080 
+const port = process.env.PORT || 8080
 
 
 const JWKS = createRemoteJWKSet(
-      new URL(`${process.env.CLIENT_URL}/api/auth/jwks`) 
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
 
-    )
+)
 
 
 const uri = process.env.MONGODB_URI
@@ -33,36 +33,36 @@ const logger = (req, res, next) => {
 
 }
 
-const verifyToken =async (req, res , next)=>{
+const verifyToken = async (req, res, next) => {
 
-  const {authorization}  = req.headers
+  const { authorization } = req.headers
 
   // console.log(req.headers , "from verify token")
 
-  const token = authorization?.split(" ")[1] ;
+  const token = authorization?.split(" ")[1];
   // console.log(token)
 
 
-  if(!token){
-    return res.status(401).json({message:"Unauthorize"})
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorize" })
   }
 
 
-   try {
+  try {
     const JWKS = createRemoteJWKSet(
       new URL('http://localhost:3000/api/auth/jwks')
     )
-    const { payload } = await jwtVerify(token, JWKS) ;
+    const { payload } = await jwtVerify(token, JWKS);
 
-    req.user = payload ;
+    req.user = payload;
 
 
-      next() ;
+    next();
 
 
   } catch (error) {
-    console.error('Token validation failed:', error) ;
-        return res.status(401).json({message:"Unauthorize"})
+    console.error('Token validation failed:', error);
+    return res.status(401).json({ message: "Unauthorize" })
 
   }
 
@@ -80,34 +80,44 @@ async function run() {
 
     app.get('/ideas', async (req, res) => {
 
-      const {search}  = req.query ;
+      const { search } = req.query;
 
-      let cursor ;
+      let cursor;
 
-      if(search){
+      if (search) {
 
-        cursor = await ideasCollection.find({
-        title: { $regex: search, $options: 'i' } 
-      })
-      } else{
+        cursor = ideasCollection.find({
+          title: { $regex: search, $options: 'i' }
+        })
+      } else {
 
         cursor = ideasCollection.find();
 
       }
       const result = await cursor.toArray();
       res.send(result)
-    })
+    });
+
+    app.post('/ideas', async (req, res) => {
+
+      const ideasData = req.body
+
+      const result = await ideasCollection.insertOne(ideasData)
+
+      res.send(result)
+
+    });
 
     // dynamic ideas from Id
-    app.get('/ideas/:ideasId', logger, verifyToken , async (req, res) => {
+    app.get('/ideas/:ideasId', logger, verifyToken, async (req, res) => {
 
-        const { ideasId } = req.params;
-        const query = { _id: new ObjectId(ideasId) }
-        const result = await ideasCollection.findOne(query);
-        res.send(result)
+      const { ideasId } = req.params;
+      const query = { _id: new ObjectId(ideasId) }
+      const result = await ideasCollection.findOne(query);
+      res.send(result)
 
 
-      })
+    })
 
 
     // trending section API
