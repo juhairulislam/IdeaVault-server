@@ -80,7 +80,20 @@ async function run() {
 
     app.get('/ideas', async (req, res) => {
 
-      const cursor = ideasCollection.find();
+      const {search}  = req.query ;
+
+      let cursor ;
+
+      if(search){
+
+        cursor = await ideasCollection.find({
+        title: { $regex: search, $options: 'i' } 
+      })
+      } else{
+
+        cursor = ideasCollection.find();
+
+      }
       const result = await cursor.toArray();
       res.send(result)
     })
