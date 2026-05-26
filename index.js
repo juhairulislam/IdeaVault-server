@@ -44,7 +44,7 @@ const verifyToken =async (req, res , next)=>{
 
 
   if(!token){
-    return res.staus(401).json({message:"Unauthorize"})
+    return res.status(401).json({message:"Unauthorize"})
   }
 
 
@@ -52,15 +52,20 @@ const verifyToken =async (req, res , next)=>{
     const JWKS = createRemoteJWKSet(
       new URL('http://localhost:3000/api/auth/jwks')
     )
-    const { payload } = await jwtVerify(token, JWKS)
-    console.log(payload)
+    const { payload } = await jwtVerify(token, JWKS) ;
+
+    req.user = payload ;
+
+
+      next() ;
+
+
   } catch (error) {
     console.error('Token validation failed:', error) ;
-        return res.staus(401).json({message:"Unauthorize"})
+        return res.status(401).json({message:"Unauthorize"})
 
   }
 
-  next() ;
 }
 
 async function run() {
