@@ -33,39 +33,33 @@ const logger = (req, res, next) => {
 }
 
 const verifyToken = async (req, res, next) => {
-
-  const { authorization } = req.headers
-
-  // console.log(req.headers , "from verify token")
-
-  const token = authorization?.split(" ");
-  // console.log(token)
-
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorize" })
-  }
-
-
   try {
+    const { authorization } = req.headers;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return res.status(401).json({ message: "Unauthorized: Token missing" });
+    }
+
+
+    const token = authorization.split(" ")[1]; 
+
     const JWKS = createRemoteJWKSet(
       new URL('http://localhost:3000/api/auth/jwks')
-    )
-    const { payload } = await jwtVerify(token, JWKS);
+    );
+
+    const { payload } = await jwtVerify(token, JWKS, {
+      algorithms: ['EdDSA'] 
+    });
 
     req.user = payload;
-
-
     next();
 
-
   } catch (error) {
-    console.error('Token validation failed:', error);
-    return res.status(401).json({ message: "Unauthorize" })
+    console.error('Token validation failed error detail:', error.message);
 
+    return res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
-
-}
+};
 
 async function run() {
   try {
@@ -115,6 +109,49 @@ async function run() {
       const result = await ideasCollection.findOne(query);
       res.send(result)
     })
+
+
+
+    // my ideas section interactivity
+
+app.get('/my-ideas', verifyToken, async (req, res) => {
+  try {
+    const userEmail = req.user?.email;
+    const query = { "author.email": userEmail };
+    const result = await ideasCollection.find(query).toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Failed to fetch your ideas" });
+  }
+});
+
+app.put('/ideas/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const query = { _id: new ObjectId(id) };
+    
+    const updateDoc = {
+      $set: { ...req.body, updatedAt: new Date() }
+    };
+
+    const result = await ideasCollection.updateOne(query, updateDoc);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Failed to update" });
+  }
+});
+
+
+app.delete('/ideas/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const query = { _id: new ObjectId(id) };
+    const result = await ideasCollection.deleteOne(query);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Failed to delete" });
+  }
+});
 
 
     // trending section API
