@@ -164,11 +164,9 @@ async function run() {
     })
 
 
-    // ==========================================
     // COMMENTS ENDPOINTS (CRUD HIERARCHY)
-    // ==========================================
 
-    // 1. Get all comments
+    //  Get all comments
     app.get('/comments', async (req, res) => {
       try {
         const result = await commentsCollection.find().toArray();
@@ -178,7 +176,7 @@ async function run() {
       }
     });
 
-    // 2. Get all comments for a specific idea (Public Route)
+    //  Get all comments for a specific idea (Public Route)
 
 
 
@@ -187,7 +185,7 @@ async function run() {
         const { ideaId } = req.params;
         const query = { ideaId: ideaId };
 
-        // Sorts comments by newest first (-1)
+
         const cursor = commentsCollection.find(query).sort({ createdAt: -1 });
         const result = await cursor.toArray();
         res.send(result);
@@ -196,11 +194,11 @@ async function run() {
       }
     });
 
-    // 3. Add a new comment (Protected Route)
+    //  Add a new comment (Protected Route)
     app.post('/comments', verifyToken, async (req, res) => {
       try {
         const { ideaId, ideaTitle, commentText } = req.body;
-        // Extract user identity safely from token payload
+
         const newComment = {
           ideaId,
           ideaTitle,
@@ -218,7 +216,7 @@ async function run() {
       }
     });
 
-    // 4. Edit an existing comment (Protected Route)
+    // Edit an existing comment (Protected Route)
     app.put('/comments/:commentId', verifyToken, async (req, res) => {
       try {
         const { commentId } = req.params;
@@ -232,7 +230,7 @@ async function run() {
           return res.status(404).json({ message: "Comment not found" });
         }
 
-        // Security check: Match user email with comment owner
+
         if (existingComment.userEmail !== userEmail) {
           return res.status(403).json({ message: "Forbidden: You can only edit your own comments" });
         }
@@ -251,7 +249,7 @@ async function run() {
       }
     });
 
-    // 5. Delete a comment (Protected Route)
+    //  Delete a comment (Protected Route)
     app.delete('/comments/:commentId', verifyToken, async (req, res) => {
       try {
         const { commentId } = req.params;
@@ -264,7 +262,7 @@ async function run() {
           return res.status(404).json({ message: "Comment not found" });
         }
 
-        // Security check: Match user email with comment owner
+
         if (existingComment.userEmail !== userEmail) {
           return res.status(403).json({ message: "Forbidden: You can only delete your own comments" });
         }
@@ -289,7 +287,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-  res.send('Hello Juhair bhai!')
+  res.send('Hello World!')
 })
 
 app.listen(port, () => {
