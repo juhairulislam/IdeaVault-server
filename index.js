@@ -41,14 +41,14 @@ const verifyToken = async (req, res, next) => {
     }
 
 
-    const token = authorization.split(" ")[1]; 
+    const token = authorization.split(" ")[1];
 
     const JWKS = createRemoteJWKSet(
       new URL('http://localhost:3000/api/auth/jwks')
     );
 
     const { payload } = await jwtVerify(token, JWKS, {
-      algorithms: ['EdDSA'] 
+      algorithms: ['EdDSA']
     });
 
     req.user = payload;
@@ -93,11 +93,11 @@ async function run() {
     });
 
     app.post('/ideas', async (req, res) => {
- 
+
       const ideasData = req.body;
 
       const result = await ideasCollection.insertOne(ideasData);
-      
+
       res.json(result);
     });
 
@@ -114,44 +114,44 @@ async function run() {
 
     // my ideas section interactivity
 
-app.get('/my-ideas', verifyToken, async (req, res) => {
-  try {
-    const userEmail = req.user?.email;
-    const query = { "author.email": userEmail };
-    const result = await ideasCollection.find(query).toArray();
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ message: "Failed to fetch your ideas" });
-  }
-});
+    app.get('/my-ideas', verifyToken, async (req, res) => {
+      try {
+        const userEmail = req.user?.email;
+        const query = { "author.email": userEmail };
+        const result = await ideasCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to fetch your ideas" });
+      }
+    });
 
-app.put('/ideas/:id', verifyToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const query = { _id: new ObjectId(id) };
-    
-    const updateDoc = {
-      $set: { ...req.body, updatedAt: new Date() }
-    };
+    app.put('/ideas/:id', verifyToken, async (req, res) => {
+      try {
+        const { id } = req.params;
+        const query = { _id: new ObjectId(id) };
 
-    const result = await ideasCollection.updateOne(query, updateDoc);
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ message: "Failed to update" });
-  }
-});
+        const updateDoc = {
+          $set: { ...req.body, updatedAt: new Date() }
+        };
+
+        const result = await ideasCollection.updateOne(query, updateDoc);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to update" });
+      }
+    });
 
 
-app.delete('/ideas/:id', verifyToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const query = { _id: new ObjectId(id) };
-    const result = await ideasCollection.deleteOne(query);
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ message: "Failed to delete" });
-  }
-});
+    app.delete('/ideas/:id', verifyToken, async (req, res) => {
+      try {
+        const { id } = req.params;
+        const query = { _id: new ObjectId(id) };
+        const result = await ideasCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to delete" });
+      }
+    });
 
 
     // trending section API
@@ -168,15 +168,15 @@ app.delete('/ideas/:id', verifyToken, async (req, res) => {
     // COMMENTS ENDPOINTS (CRUD HIERARCHY)
     // ==========================================
 
-// 1. Get all comments
-app.get('/comments', async (req, res) => {
-  try {
-    const result = await commentsCollection.find().toArray();
-    res.send(result);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch all comments" });
-  }
-});
+    // 1. Get all comments
+    app.get('/comments', async (req, res) => {
+      try {
+        const result = await commentsCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch all comments" });
+      }
+    });
 
     // 2. Get all comments for a specific idea (Public Route)
 
@@ -186,7 +186,7 @@ app.get('/comments', async (req, res) => {
       try {
         const { ideaId } = req.params;
         const query = { ideaId: ideaId };
-        
+
         // Sorts comments by newest first (-1)
         const cursor = commentsCollection.find(query).sort({ createdAt: -1 });
         const result = await cursor.toArray();
@@ -199,15 +199,15 @@ app.get('/comments', async (req, res) => {
     // 3. Add a new comment (Protected Route)
     app.post('/comments', verifyToken, async (req, res) => {
       try {
-        const { ideaId, commentText } = req.body;
-        
+        const { ideaId, ideaTitle, commentText } = req.body;
         // Extract user identity safely from token payload
         const newComment = {
           ideaId,
+          ideaTitle,
           commentText,
           userName: req.user?.name || "Anonymous Innovator",
           userEmail: req.user?.email,
-          userPhoto: req.user?.picture || req.user?.image || "",
+          userPhoto: req.user?.image || "",
           createdAt: new Date()
         };
 
@@ -238,9 +238,9 @@ app.get('/comments', async (req, res) => {
         }
 
         const updateDoc = {
-          $set: { 
+          $set: {
             commentText: commentText,
-            updatedAt: new Date() 
+            updatedAt: new Date()
           }
         };
 
