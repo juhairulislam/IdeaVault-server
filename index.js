@@ -168,7 +168,20 @@ app.delete('/ideas/:id', verifyToken, async (req, res) => {
     // COMMENTS ENDPOINTS (CRUD HIERARCHY)
     // ==========================================
 
-    // 1. Get all comments for a specific idea (Public Route)
+// 1. Get all comments
+app.get('/comments', async (req, res) => {
+  try {
+    const result = await commentsCollection.find().toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch all comments" });
+  }
+});
+
+    // 2. Get all comments for a specific idea (Public Route)
+
+
+
     app.get('/comments/:ideaId', async (req, res) => {
       try {
         const { ideaId } = req.params;
@@ -183,7 +196,7 @@ app.delete('/ideas/:id', verifyToken, async (req, res) => {
       }
     });
 
-    // 2. Add a new comment (Protected Route)
+    // 3. Add a new comment (Protected Route)
     app.post('/comments', verifyToken, async (req, res) => {
       try {
         const { ideaId, commentText } = req.body;
@@ -205,7 +218,7 @@ app.delete('/ideas/:id', verifyToken, async (req, res) => {
       }
     });
 
-    // 3. Edit an existing comment (Protected Route)
+    // 4. Edit an existing comment (Protected Route)
     app.put('/comments/:commentId', verifyToken, async (req, res) => {
       try {
         const { commentId } = req.params;
@@ -238,7 +251,7 @@ app.delete('/ideas/:id', verifyToken, async (req, res) => {
       }
     });
 
-    // 4. Delete a comment (Protected Route)
+    // 5. Delete a comment (Protected Route)
     app.delete('/comments/:commentId', verifyToken, async (req, res) => {
       try {
         const { commentId } = req.params;
