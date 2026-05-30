@@ -37,6 +37,7 @@ const logger = (req, res, next) => {
 }
 
 const verifyToken = async (req, res, next) => {
+  console.log("=========== NEW DEPLOY TEST ===========");
   try {
     const authorization = req.headers.authorization;
 
@@ -247,7 +248,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('deployment test!')
 })
 
 app.listen(port, () => {
