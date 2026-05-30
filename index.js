@@ -38,29 +38,42 @@ const logger = (req, res, next) => {
 
 const verifyToken = async (req, res, next) => {
   try {
-    const { authorization } = req.headers;
+    const authorization = req.headers.authorization;
 
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      return res.status(401).json({ message: "Unauthorized: Token missing" });
+    if (!authorization) {
+      return res.status(401).json({
+        message: "Unauthorized: No token provided"
+      });
     }
 
-    const tokenParts = authorization.split(" ");
-    const token = tokenParts; 
+    if (!authorization.startsWith('Bearer ')) {
+      return res.status(401).json({
+        message: "Unauthorized: Invalid token format"
+      });
+    }
 
-    const JWKS = createRemoteJWKSet(
-      new URL('https://ideavault-fawn.vercel.app/api/auth/jwks')
-    );
+    const token = authorization.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Unauthorized: Empty token"
+      });
+    }
 
     const { payload } = await jwtVerify(token, JWKS, {
       algorithms: ['EdDSA']
     });
 
     req.user = payload;
+
     next();
 
   } catch (error) {
-    console.error('Token validation failed error detail:', error.message);
-    return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    console.error("Token validation failed:", error);
+
+    return res.status(401).json({
+      message: "Unauthorized: Invalid token"
+    });
   }
 };
 
