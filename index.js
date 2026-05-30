@@ -47,11 +47,20 @@ const verifyToken = async (req, res, next) => {
       });
     }
 
-    const token = authorization.split(" ")[1];
+   const token = authorization.split(" ")[1];
 
-    const { payload } = await jwtVerify(token, JWKS, {
-      algorithms: ["EdDSA"],
-    });
+console.log("TOKEN EXISTS:", !!token);
+console.log("TOKEN LENGTH:", token?.length);
+
+const response = await fetch(
+  "https://ideavault-fawn.vercel.app/api/auth/jwks"
+);
+
+console.log("JWKS STATUS:", response.status);
+
+const { payload } = await jwtVerify(token, JWKS, {
+  algorithms: ["EdDSA"],
+});
 
     req.user = payload;
     next();
