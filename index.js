@@ -1,20 +1,15 @@
 const express = require('express')
 const dotenv = require("dotenv");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-
 const cors = require("cors");
 const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
+
 dotenv.config()
 const app = express()
+
 app.use(cors())
 app.use(express.json())
 const port = process.env.PORT || 8080
-
-
-const JWKS = createRemoteJWKSet(
-  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
-)
-
 
 const uri = process.env.MONGODB_URI
 
@@ -40,11 +35,10 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).json({ message: "Unauthorized: Token missing" });
     }
 
-
-    const token = authorization.split(" ")[1];
+    const token = authorization.split(" ");
 
     const JWKS = createRemoteJWKSet(
-      new URL('http://localhost:3000/api/auth/jwks')
+      new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
     );
 
     const { payload } = await jwtVerify(token, JWKS, {
@@ -56,63 +50,42 @@ const verifyToken = async (req, res, next) => {
 
   } catch (error) {
     console.error('Token validation failed error detail:', error.message);
-
     return res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
 };
 
 async function run() {
   try {
-    // Connect the client to the server (optional starting in v4.7)
-    // await client.connect();
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-
     const db = client.db('ideavault');
     const ideasCollection = db.collection('ideas');
     const commentsCollection = db.collection('comments');
 
     app.get('/ideas', async (req, res) => {
-
       const { search } = req.query;
-
       let cursor;
-
       if (search) {
-
         cursor = ideasCollection.find({
           title: { $regex: search, $options: 'i' }
         })
       } else {
-
         cursor = ideasCollection.find();
-
       }
       const result = await cursor.toArray();
       res.send(result)
     });
 
     app.post('/ideas', async (req, res) => {
-
       const ideasData = req.body;
-
       const result = await ideasCollection.insertOne(ideasData);
-
       res.json(result);
     });
 
-    // dynamic ideas from Id
     app.get('/ideas/:ideasId', logger, verifyToken, async (req, res) => {
-
       const { ideasId } = req.params;
       const query = { _id: new ObjectId(ideasId) }
       const result = await ideasCollection.findOne(query);
       res.send(result)
     })
-
-
-
-    // my ideas section interactivity
 
     app.get('/my-ideas', verifyToken, async (req, res) => {
       try {
@@ -129,18 +102,15 @@ async function run() {
       try {
         const { id } = req.params;
         const query = { _id: new ObjectId(id) };
-
         const updateDoc = {
           $set: { ...req.body, updatedAt: new Date() }
         };
-
         const result = await ideasCollection.updateOne(query, updateDoc);
         res.send(result);
       } catch (error) {
         res.status(500).send({ message: "Failed to update" });
       }
     });
-
 
     app.delete('/ideas/:id', verifyToken, async (req, res) => {
       try {
@@ -153,20 +123,12 @@ async function run() {
       }
     });
 
-
-    // trending section API
-
     app.get('/trending', async (req, res) => {
-
       const cursor = ideasCollection.find().limit(6);
       const result = await cursor.toArray();
       res.send(result)
     })
 
-
-    // COMMENTS ENDPOINTS (CRUD HIERARCHY)
-
-    //  Get all comments
     app.get('/comments', async (req, res) => {
       try {
         const result = await commentsCollection.find().toArray();
@@ -176,16 +138,10 @@ async function run() {
       }
     });
 
-    //  Get all comments for a specific idea (Public Route)
-
-
-
     app.get('/comments/:ideaId', async (req, res) => {
       try {
         const { ideaId } = req.params;
         const query = { ideaId: ideaId };
-
-
         const cursor = commentsCollection.find(query).sort({ createdAt: -1 });
         const result = await cursor.toArray();
         res.send(result);
@@ -194,11 +150,9 @@ async function run() {
       }
     });
 
-    //  Add a new comment (Protected Route)
     app.post('/comments', verifyToken, async (req, res) => {
       try {
         const { ideaId, ideaTitle, commentText } = req.body;
-
         const newComment = {
           ideaId,
           ideaTitle,
@@ -208,7 +162,6 @@ async function run() {
           userPhoto: req.user?.image || "",
           createdAt: new Date()
         };
-
         const result = await commentsCollection.insertOne(newComment);
         res.status(201).json({ ...newComment, _id: result.insertedId });
       } catch (error) {
@@ -216,7 +169,6 @@ async function run() {
       }
     });
 
-    // Edit an existing comment (Protected Route)
     app.put('/comments/:commentId', verifyToken, async (req, res) => {
       try {
         const { commentId } = req.params;
@@ -229,7 +181,6 @@ async function run() {
         if (!existingComment) {
           return res.status(404).json({ message: "Comment not found" });
         }
-
 
         if (existingComment.userEmail !== userEmail) {
           return res.status(403).json({ message: "Forbidden: You can only edit your own comments" });
@@ -249,7 +200,6 @@ async function run() {
       }
     });
 
-    //  Delete a comment (Protected Route)
     app.delete('/comments/:commentId', verifyToken, async (req, res) => {
       try {
         const { commentId } = req.params;
@@ -262,7 +212,6 @@ async function run() {
           return res.status(404).json({ message: "Comment not found" });
         }
 
-
         if (existingComment.userEmail !== userEmail) {
           return res.status(403).json({ message: "Forbidden: You can only delete your own comments" });
         }
@@ -274,17 +223,12 @@ async function run() {
       }
     });
 
-
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+  } catch (err) {
+    console.error(err);
   }
 }
 run().catch(console.dir);
-
-
-
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -293,3 +237,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+module.exports = app;
