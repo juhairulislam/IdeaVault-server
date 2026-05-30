@@ -22,7 +22,6 @@ const port = process.env.PORT || 8080
 
 const uri = process.env.MONGODB_URI
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -36,6 +35,8 @@ const logger = (req, res, next) => {
   next();
 }
 
+const JWKS = createRemoteJWKSet(new URL('https://ideavault-fawn.vercel.app/api/auth/jwks'));
+
 const verifyToken = async (req, res, next) => {
   console.log("=========== NEW DEPLOY TEST ===========");
   try {
@@ -47,31 +48,23 @@ const verifyToken = async (req, res, next) => {
       });
     }
 
-   const token = authorization.split(" ")[1];
+    const token = authorization.split(" ");
 
-console.log("TOKEN EXISTS:", !!token);
-console.log("TOKEN LENGTH:", token?.length);
+    console.log("TOKEN EXISTS:", !!token);
+    console.log("TOKEN LENGTH:", token?.length);
 
-const response = await fetch(
-  "https://ideavault-fawn.vercel.app/api/auth/jwks"
-);
 
-console.log("JWKS STATUS:", response.status);
-
-const { payload } = await jwtVerify(token, JWKS, {
-  algorithms: ["EdDSA"],
-});
+    const { payload } = await jwtVerify(token, JWKS, {
+      algorithms: ["EdDSA"],
+    });
 
     req.user = payload;
     next();
 
   } catch (error) {
     console.error("========== JWT ERROR ==========");
-    console.error(error);
     console.error("NAME:", error?.name);
     console.error("MESSAGE:", error?.message);
-    console.error("CAUSE:", error?.cause);
-    console.error("STACK:", error?.stack);
     console.error("===============================");
 
     return res.status(401).json({
@@ -257,7 +250,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-  res.send('deployment test!')
+  res.send('deployment test 1 2 3 !')
 })
 
 app.listen(port, () => {
