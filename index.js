@@ -48,7 +48,7 @@ const verifyToken = async (req, res, next) => {
     const token = tokenParts; 
 
     const JWKS = createRemoteJWKSet(
-      new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
+      new URL('https://ideavault-fawn.vercel.app/api/auth/jwks')
     );
 
     const { payload } = await jwtVerify(token, JWKS, {
