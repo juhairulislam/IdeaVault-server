@@ -13,7 +13,7 @@ app.use(cors({
     'https://ideavault-fawn.vercel.app',
     'https://ideavault-nda5z2p4w-juhairulislams-projects.vercel.app'
   ],
-  credentials: true, 
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -69,12 +69,16 @@ const verifyToken = async (req, res, next) => {
     next();
 
   } catch (error) {
-    console.error("Token validation failed:", error);
+  console.error("FULL ERROR:");
+  console.error(error);
+  console.error("NAME:", error?.name);
+  console.error("MESSAGE:", error?.message);
+  console.error("CAUSE:", error?.cause);
 
-    return res.status(401).json({
-      message: "Unauthorized: Invalid token"
-    });
-  }
+  return res.status(401).json({
+    message: "Unauthorized"
+  });
+}
 };
 
 async function run() {
