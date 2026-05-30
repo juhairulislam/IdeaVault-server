@@ -40,45 +40,34 @@ const verifyToken = async (req, res, next) => {
   try {
     const authorization = req.headers.authorization;
 
-    if (!authorization) {
+    if (!authorization?.startsWith("Bearer ")) {
       return res.status(401).json({
-        message: "Unauthorized: No token provided"
+        message: "Unauthorized: Token missing"
       });
     }
 
-    if (!authorization.startsWith('Bearer ')) {
-      return res.status(401).json({
-        message: "Unauthorized: Invalid token format"
-      });
-    }
-
-    const token = authorization.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({
-        message: "Unauthorized: Empty token"
-      });
-    }
+    const token = authorization.split(" ")[1];
 
     const { payload } = await jwtVerify(token, JWKS, {
-      algorithms: ['EdDSA']
+      algorithms: ["EdDSA"],
     });
 
     req.user = payload;
-
     next();
 
   } catch (error) {
-  console.error("FULL ERROR:");
-  console.error(error);
-  console.error("NAME:", error?.name);
-  console.error("MESSAGE:", error?.message);
-  console.error("CAUSE:", error?.cause);
+    console.error("========== JWT ERROR ==========");
+    console.error(error);
+    console.error("NAME:", error?.name);
+    console.error("MESSAGE:", error?.message);
+    console.error("CAUSE:", error?.cause);
+    console.error("STACK:", error?.stack);
+    console.error("===============================");
 
-  return res.status(401).json({
-    message: "Unauthorized"
-  });
-}
+    return res.status(401).json({
+      message: "Unauthorized: Invalid token"
+    });
+  }
 };
 
 async function run() {
