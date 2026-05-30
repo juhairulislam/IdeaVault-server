@@ -7,7 +7,16 @@ const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 dotenv.config()
 const app = express()
 
-app.use(cors())
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://ideavault-fawn.vercel.app',
+    'https://ideavault-nda5z2p4w-juhairulislams-projects.vercel.app'
+  ],
+  credentials: true, 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json())
 const port = process.env.PORT || 8080
 
@@ -35,7 +44,8 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).json({ message: "Unauthorized: Token missing" });
     }
 
-    const token = authorization.split(" ");
+    const tokenParts = authorization.split(" ");
+    const token = tokenParts; 
 
     const JWKS = createRemoteJWKSet(
       new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
